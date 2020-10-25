@@ -1,0 +1,10 @@
+{
+    "name": "LobbyVotesSave",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/KingEnderBrine/-RoR2-LobbyVotesSave",
+    "description": "Saves chosen difficulty and artifacts between the game restarts",
+    "dependencies": [
+        "bbepis-BepInExPack-5.3.1",
+	    "tristanmcpherson-R2API-2.5.14"
+    ]
+}
