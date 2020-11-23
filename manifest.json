@@ -1,6 +1,6 @@
 {
     "name": "LobbyVotesSave",
-    "version_number": "1.1.0",
+    "version_number": "1.1.1",
     "website_url": "https://github.com/KingEnderBrine/-RoR2-LobbyVotesSave",
     "description": "Saves chosen difficulty, character and artifacts between the game restarts",
     "dependencies": [

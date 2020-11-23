@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -8,6 +9,7 @@ using RoR2.UI;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Permissions;
 using UnityEngine;
@@ -17,8 +19,9 @@ using UnityEngine;
 namespace LobbyVotesSave
 {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
+    [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.1.0")]
+    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.1.1")]
     public class LobbyVotesSavePlugin : BaseUnityPlugin
     {
         internal static LobbyVotesSavePlugin Instance { get; private set; }
@@ -27,10 +30,13 @@ namespace LobbyVotesSave
         private static string SavesDirectory { get; } = System.IO.Path.Combine(Application.persistentDataPath, "LobbyVotesSave");
 
         private static CharacterSelectController cachedCharacterSelectController;
+        private static ConfigEntry<bool> Enabled { get; set; }
 
         private void Awake()
         {
             Instance = this;
+
+            SetupConfig();
 
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnLocalUserSignIn += RestoreVotes;
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnVotesUpdated += StoreVotes;
@@ -52,6 +58,21 @@ namespace LobbyVotesSave
             IL.RoR2.NetworkUser.Start -= NetworkUserStartIL;
 
             On.RoR2.UI.CharacterSelectController.Start -= CacheCharacterSelectController;
+        }
+
+        private void SetupConfig()
+        {
+            Enabled = Config.Bind("Main", "Enabled", true, "Load stored values when enter lobby");
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.KingEnderBrine.InLobbyConfig"))
+            {
+                SetupInLobbyConfig();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        private void SetupInLobbyConfig()
+        {
+            InLobbyConfig.ModConfigCatalog.Add(InLobbyConfig.Fields.ConfigFieldUtilities.CreateFromBepInExConfigFile(Config, "Lobby votes save"));
         }
 
         private void CacheCharacterSelectController(On.RoR2.UI.CharacterSelectController.orig_Start orig, RoR2.UI.CharacterSelectController self)
@@ -90,6 +111,10 @@ namespace LobbyVotesSave
 
             try
             {
+                if (!Enabled.Value)
+                {
+                    return;
+                }
                 var path = System.IO.Path.Combine(SavesDirectory, localUser.userProfile.fileName);
                 if (File.Exists(path))
                 {
@@ -126,6 +151,11 @@ namespace LobbyVotesSave
         {
             try
             {
+                if (!Enabled.Value)
+                {
+                    return -1;
+                }
+
                 if (PreGameController.instance && PreGameController.instance.gameModeIndex == GameModeCatalog.FindGameModeIndex("EclipseRun"))
                 {
                     return -1;

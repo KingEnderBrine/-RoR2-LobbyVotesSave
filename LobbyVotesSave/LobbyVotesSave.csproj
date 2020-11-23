@@ -15,6 +15,9 @@
     <Reference Include="BepInEx">
       <HintPath>..\..\CommonLibs\BepInEx.dll</HintPath>
     </Reference>
+    <Reference Include="InLobbyConfig">
+      <HintPath>..\..\CommonLibs\InLobbyConfig.dll</HintPath>
+    </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\..\CommonLibs\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
