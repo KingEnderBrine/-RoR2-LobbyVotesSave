@@ -21,7 +21,7 @@ namespace LobbyVotesSave
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.1.1")]
+    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.1.2")]
     public class LobbyVotesSavePlugin : BaseUnityPlugin
     {
         internal static LobbyVotesSavePlugin Instance { get; private set; }
@@ -41,7 +41,7 @@ namespace LobbyVotesSave
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnLocalUserSignIn += RestoreVotes;
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnVotesUpdated += StoreVotes;
 
-            On.RoR2.NetworkUser.CmdSetBodyPreference += StoreBodyPreference;
+            On.RoR2.NetworkUser.SetBodyPreference += StoreBodyPreference;
             IL.RoR2.NetworkUser.Start += NetworkUserStartIL;
 
             On.RoR2.UI.CharacterSelectController.Start += CacheCharacterSelectController;
@@ -54,7 +54,7 @@ namespace LobbyVotesSave
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnLocalUserSignIn -= RestoreVotes;
             On.RoR2.PreGameRuleVoteController.LocalUserBallotPersistenceManager.OnVotesUpdated -= StoreVotes;
 
-            On.RoR2.NetworkUser.CmdSetBodyPreference -= StoreBodyPreference;
+            On.RoR2.NetworkUser.SetBodyPreference -= StoreBodyPreference;
             IL.RoR2.NetworkUser.Start -= NetworkUserStartIL;
 
             On.RoR2.UI.CharacterSelectController.Start -= CacheCharacterSelectController;
@@ -192,12 +192,16 @@ namespace LobbyVotesSave
             return -1;
         }
 
-        private static void StoreBodyPreference(On.RoR2.NetworkUser.orig_CmdSetBodyPreference orig, NetworkUser self, int newBodyIndexPreference)
+        private static void StoreBodyPreference(On.RoR2.NetworkUser.orig_SetBodyPreference orig, NetworkUser self, int newBodyIndexPreference)
         {
             orig(self, newBodyIndexPreference);
 
             try
             {
+                if (!self.isLocalPlayer || self?.localUser?.userProfile == null)
+                {
+                    return;
+                }
                 Directory.CreateDirectory(SavesDirectory);
                 var path = System.IO.Path.Combine(SavesDirectory, $"{self.localUser.userProfile.fileName}_body");
                 File.WriteAllText(path, ((int)SurvivorCatalog.GetSurvivorIndexFromBodyIndex(newBodyIndexPreference)).ToString());
