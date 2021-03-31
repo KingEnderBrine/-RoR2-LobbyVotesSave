@@ -3,7 +3,6 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using R2API.Utils;
 using RoR2;
 using RoR2.UI;
 using System;
@@ -16,12 +15,12 @@ using UnityEngine;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+[assembly: R2API.Utils.ManualNetworkRegistration]
+[assembly: EnigmaticThunder.Util.ManualNetworkRegistration]
 namespace LobbyVotesSave
 {
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.bepis.r2api", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.1.2")]
+    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.2.0")]
     public class LobbyVotesSavePlugin : BaseUnityPlugin
     {
         internal static LobbyVotesSavePlugin Instance { get; private set; }
@@ -139,7 +138,7 @@ namespace LobbyVotesSave
             c.GotoPrev(x => x.MatchLdstr("CommandoBody"));
 
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<NetworkUser, int>>(RestoreBodyPreference);
+            c.EmitDelegate<Func<NetworkUser, BodyIndex>>(RestoreBodyPreference);
             c.Emit(OpCodes.Dup);
             c.Emit(OpCodes.Ldc_I4_1);
             c.Emit(OpCodes.Add);
@@ -147,18 +146,18 @@ namespace LobbyVotesSave
             c.Emit(OpCodes.Pop);
         }
 
-        private static int RestoreBodyPreference(NetworkUser networkUser)
+        private static BodyIndex RestoreBodyPreference(NetworkUser networkUser)
         {
             try
             {
                 if (!Enabled.Value)
                 {
-                    return -1;
+                    return BodyIndex.None;
                 }
 
                 if (PreGameController.instance && PreGameController.instance.gameModeIndex == GameModeCatalog.FindGameModeIndex("EclipseRun"))
                 {
-                    return -1;
+                    return BodyIndex.None;
                 }
                 var path = System.IO.Path.Combine(SavesDirectory, $"{networkUser.localUser.userProfile.fileName}_body");
                 if (File.Exists(path))
@@ -167,15 +166,14 @@ namespace LobbyVotesSave
                     var survivorDef = SurvivorCatalog.GetSurvivorDef(survivorIndex);
                     if (survivorDef == null)
                     {
-                        return -1;
+                        return BodyIndex.None;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(survivorDef.unlockableName))
+                    if (survivorDef.unlockableDef != null)
                     {
-                        var unlockable = UnlockableCatalog.GetUnlockableDef(survivorDef.unlockableName);
-                        if (unlockable == null || !networkUser.localUser.userProfile.statSheet.HasUnlockable(unlockable))
+                        if (!networkUser.localUser.userProfile.statSheet.HasUnlockable(survivorDef.unlockableDef))
                         {
-                            return -1;
+                            return BodyIndex.None;
                         }
                     }
 
@@ -189,10 +187,10 @@ namespace LobbyVotesSave
                 InstanceLogger.LogWarning("Failed to load body preference");
                 InstanceLogger.LogError(e);
             }
-            return -1;
+            return BodyIndex.None;
         }
 
-        private static void StoreBodyPreference(On.RoR2.NetworkUser.orig_SetBodyPreference orig, NetworkUser self, int newBodyIndexPreference)
+        private static void StoreBodyPreference(On.RoR2.NetworkUser.orig_SetBodyPreference orig, NetworkUser self, BodyIndex newBodyIndexPreference)
         {
             orig(self, newBodyIndexPreference);
 
@@ -213,4 +211,16 @@ namespace LobbyVotesSave
             }
         }
     }
+}
+
+namespace R2API.Utils
+{
+    [AttributeUsage(AttributeTargets.Assembly)]
+    public class ManualNetworkRegistrationAttribute : Attribute { }
+}
+
+namespace EnigmaticThunder.Util
+{
+    [AttributeUsage(AttributeTargets.Assembly)]
+    public class ManualNetworkRegistrationAttribute : Attribute { }
 }
