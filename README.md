@@ -2,7 +2,14 @@
 Saves chosen difficulty, character and artifacts between the game restarts.
 Saves are unique for each profile.
 
+
+If you want to support me, [you can do that here](https://www.buymeacoffee.com/KingEnderBrine)
+
 # Changelog
+**1.2.1**
+
+* Can no longer select hidden characters. (That could happen after adding/removing character mods)
+
 **1.2.0**
 
 * Removed r2api dependency

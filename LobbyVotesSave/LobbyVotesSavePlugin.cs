@@ -15,12 +15,10 @@ using UnityEngine;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-[assembly: R2API.Utils.ManualNetworkRegistration]
-[assembly: EnigmaticThunder.Util.ManualNetworkRegistration]
 namespace LobbyVotesSave
 {
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.2.0")]
+    [BepInPlugin("com.KingEnderBrine.LobbyVotesSave", "Lobby Votes Save", "1.2.1")]
     public class LobbyVotesSavePlugin : BaseUnityPlugin
     {
         internal static LobbyVotesSavePlugin Instance { get; private set; }
@@ -168,6 +166,11 @@ namespace LobbyVotesSave
                     {
                         return BodyIndex.None;
                     }
+                    
+                    if (survivorDef.hidden)
+                    {
+                        return BodyIndex.None;
+                    }
 
                     if (survivorDef.unlockableDef != null)
                     {
@@ -211,16 +214,4 @@ namespace LobbyVotesSave
             }
         }
     }
-}
-
-namespace R2API.Utils
-{
-    [AttributeUsage(AttributeTargets.Assembly)]
-    public class ManualNetworkRegistrationAttribute : Attribute { }
-}
-
-namespace EnigmaticThunder.Util
-{
-    [AttributeUsage(AttributeTargets.Assembly)]
-    public class ManualNetworkRegistrationAttribute : Attribute { }
 }
