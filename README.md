@@ -2,10 +2,12 @@
 Saves chosen difficulty, character and artifacts between the game restarts.
 Saves are unique for each profile.
 
-
-If you want to support me, [you can do that here](https://www.buymeacoffee.com/KingEnderBrine)
-
 # Changelog
+**1.3.0**
+
+* Fixes for `Survivors of the Void` update
+* Removed character saving because it was implemented in vanilla
+
 **1.2.1**
 
 * Can no longer select hidden characters. (That could happen after adding/removing character mods)
